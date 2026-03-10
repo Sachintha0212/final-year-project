@@ -1,33 +1,35 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import os
+from datetime import datetime
 
 app = Flask(__name__)
-CORS(app)  # allow frontend to call backend
+CORS(app)  
+UPLOAD_FOLDER = "uploads"  
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)  
 
-@app.get("/health")
+@app.route("/health", methods=["GET"]) 
 def health():
-    return {"status": "ok"}
+    return jsonify({"status": "running"})  
 
-@app.post("/predict")
+
+@app.route("/predict", methods=["POST"])  
 def predict():
-    # Expecting an image file sent as form-data with key: "image"
+   
     if "image" not in request.files:
         return jsonify({"error": "No image uploaded. Use form-data key: image"}), 400
 
     img = request.files["image"]
-    save_path = os.path.join("uploads", img.filename)
-    os.makedirs("uploads", exist_ok=True)
+    save_path = os.path.join(UPLOAD_FOLDER, filename) 
     img.save(save_path)
 
     # TODO: Replace this with your ML model prediction
-    # result = your_model_predict(save_path)
+    # result = your_model_predicts(save_paths)
     result = {
-        "class": "placeholder_class",
-        "confidence": 0.90
+        "class": "sample_prediction",  
+        "confidence": 0.88,  
+        "file_saved": filename  
     }
-
     return jsonify(result)
-
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    app.run(host="0.0.0.0", port=5000) 
