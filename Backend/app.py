@@ -10,8 +10,7 @@ app = Flask(__name__)
 CORS(app)  # allows your frontend to talk to this server
 
 # Load your model once when the server starts
-model = load_model(r'D:\FINAL YEAR\FYP\Project\fyp\ml\ml model.keras')
-
+model = load_model('ml/ml model.keras')
 # Define your class labels (match whatever your model was trained on)
 CLASS_LABELS = [
     'Low light intensity(LI)',

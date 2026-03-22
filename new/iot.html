@@ -2,131 +2,186 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>IoT Monitoring | HelaGrow AI</title>
+  <title>IoT Monitor | HelaGrow AI</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="style.css">
-  <link rel="stylesheet" href="iot-style.css">
 </head>
 <body class="iot-page">
-<!-- ===== NAVBAR ===== -->
-<nav class="navbar">
-  <div class="container navbar-inner">
-    <div class="logo">
-      <i class="fas fa-leaf"></i>
-      Hela<span>Grow</span>
+
+<!-- ═══ NAVBAR ═══ -->
+<nav class="navbar" id="navbar">
+  <div class="navbar-inner">
+    <a href="home.html" class="logo"><i class="fas fa-leaf"></i>Hela<span>Grow</span></a>
+    <div class="nav-links" id="navLinks">
+      <a href="home.html"   class="nav-link"><i class="fas fa-home"></i> Home</a>
+      <a href="#dashboard"  class="nav-link active"><i class="fas fa-chart-line"></i> Dashboard</a>
+      <a href="#camera"     class="nav-link"><i class="fas fa-video"></i> Camera</a>
+      <a href="disease.html" class="nav-link"><i class="fas fa-bug"></i> Diseases</a>
+      <a href="home.html#scan" class="btn-nav"><i class="fas fa-camera"></i> Scan Plant</a>
     </div>
-    <div class="nav-links">
-      <a href="home.html" class="nav-link">
-        <i class="fas fa-home"></i>
-        Home
-      </a>
-      <a href="#overview" class="nav-link active">
-        <i class="fas fa-chart-line"></i>
-        Dashboard
-      </a>
-      <a href="#sensors" class="nav-link">
-        <i class="fas fa-microchip"></i>
-        Sensors
-      </a>
-      <a href="#alerts" class="nav-link">
-        <i class="fas fa-bell"></i>
-        Alerts
-      </a>
-    </div>
-    <div class="mobile-menu-btn">
-      <i class="fas fa-bars"></i>
-    </div>
+    <button class="mobile-menu-btn" id="menuBtn"><i class="fas fa-bars"></i></button>
   </div>
 </nav>
-<!-- ===== HEADER ===== -->
-  <header class="camera-header">
-    <div class="container">
-      <div class="header-content">
-        <div class="header-text">
-          <h1>Live Camera Monitoring</h1>
-          <p>Real-time crop monitoring using the IoT camera only</p>
 
-          <div class="connection-status">
-            <div class="status-indicator">
-              <div class="status-dot"></div>
-              <span>Camera Connected</span>
-            </div>
-
-            <div class="last-update">
-              <i class="fas fa-clock"></i>
-              Last refreshed: <span id="lastUpdate">Just now</span>
-            </div>
+<!-- ═══ IoT HEADER ═══ -->
+<header class="iot-header" id="dashboard">
+  <div class="container">
+    <div class="iot-header-inner">
+      <div>
+        <div class="section-tag" style="margin-bottom:12px;">
+          <i class="fas fa-satellite-dish"></i> Real-Time Monitoring
+        </div>
+        <h1>IoT Live Dashboard</h1>
+        <p>ESP32 sensor network — environmental telemetry for your Centella Asiatica crop</p>
+        <div class="header-badges">
+          <div class="hbadge live">
+            <i class="fas fa-circle"></i> Camera Feed Live
+          </div>
+          <div class="hbadge">
+            <i class="fas fa-clock"></i>
+            Last refreshed: <span id="lastUpdate" style="margin-left:4px;font-weight:600;color:var(--text-1);">—</span>
+          </div>
+          <div class="hbadge">
+            <i class="fas fa-microchip"></i> IP: 192.168.8.105
           </div>
         </div>
+      </div>
 
-        <div class="header-actions">
-          <button class="btn btn-refresh" onclick="refreshCamera()">
-            <i class="fas fa-sync-alt"></i>
-            Refresh Camera
+      <div class="header-btns">
+        <button class="btn btn-secondary" onclick="refreshCamera()">
+          <i class="fas fa-sync-alt"></i> Refresh Feed
+        </button>
+        <a class="btn btn-primary" href="http://192.168.8.105" target="_blank">
+          <i class="fas fa-up-right-from-square"></i> Open Camera
+        </a>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ═══ CAMERA FEED ═══ -->
+<section class="iot-section" id="camera" style="padding-top:48px;">
+  <div class="container">
+
+    <!-- Camera Card -->
+    <div class="cam-card reveal">
+      <div class="cam-card-head">
+        <h3><i class="fas fa-video"></i> ESP32-CAM Live Feed</h3>
+        <span class="cam-ip">http://192.168.8.105</span>
+      </div>
+      <div class="cam-body">
+        <iframe
+          id="cameraFrame"
+          class="cam-frame"
+          src="http://192.168.8.105"
+          title="ESP32-CAM Live Feed">
+        </iframe>
+
+        <p class="cam-note">
+          <i class="fas fa-info-circle" style="color:var(--green);margin-right:6px;"></i>
+          Live stream from the ESP32-CAM module mounted over the crop bed.
+          Ensure your device is on the same local network as the camera module (192.168.8.105).
+          Use the <strong>Open Camera</strong> button to view the full-resolution stream in a new tab.
+        </p>
+
+        <div class="cam-actions">
+          <a class="btn btn-primary" href="http://192.168.8.105" target="_blank">
+            <i class="fas fa-camera"></i> Full Resolution Feed
+          </a>
+          <button class="btn btn-secondary" onclick="refreshCamera()">
+            <i class="fas fa-sync-alt"></i> Reload Frame
           </button>
-
-          <a class="btn btn-open" href="http://192.168.8.105" target="_blank">
-            <i class="fas fa-up-right-from-square"></i>
-            Open Camera
+          <a class="btn btn-outline" href="home.html#scan">
+            <i class="fas fa-brain"></i> AI Disease Scan
           </a>
         </div>
       </div>
     </div>
-  </header>
 
-  <!-- ===== CAMERA SECTION ===== -->
-  <section class="camera-section" id="camera">
-    <div class="container">
-      <div class="camera-card">
-        <div class="card-header">
-          <h3><i class="fas fa-video"></i> ESP32-CAM Live Feed</h3>
-          <div class="camera-ip">IP: http://192.168.8.105</div>
+    <!-- Info strip -->
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:20px;" class="reveal">
+      <div class="cam-card" style="padding:20px 24px;">
+        <div style="font-size:0.7rem;color:var(--text-3);text-transform:uppercase;letter-spacing:.09em;margin-bottom:8px;">
+          <i class="fas fa-microchip" style="color:var(--green);margin-right:6px;"></i>Module
         </div>
-
-        <div class="card-body">
-          <div class="camera-frame-wrapper">
-            <iframe
-              id="cameraFrame"
-              class="camera-frame"
-              src="http://192.168.8.105">
-            </iframe>
-          </div>
-
-          <p class="camera-note">
-            This page now shows only the camera feed. All other IoT parts such as temperature,
-            humidity, soil moisture, alerts, recommendations, charts, and sensor details have been removed.
-          </p>
-
-          <div class="camera-actions">
-            <a class="btn btn-open" href="http://192.168.8.105" target="_blank">
-              <i class="fas fa-camera"></i>
-              View Camera Feed
-            </a>
-          </div>
+        <div style="font-family:var(--font-head);font-weight:700;font-size:1rem;">ESP32-CAM</div>
+        <div style="font-size:0.8rem;color:var(--text-3);margin-top:4px;">OV2640 Image Sensor, WiFi 802.11 b/g/n</div>
+      </div>
+      <div class="cam-card" style="padding:20px 24px;">
+        <div style="font-size:0.7rem;color:var(--text-3);text-transform:uppercase;letter-spacing:.09em;margin-bottom:8px;">
+          <i class="fas fa-network-wired" style="color:var(--green);margin-right:6px;"></i>Network
         </div>
+        <div style="font-family:var(--font-head);font-weight:700;font-size:1rem;">Local LAN</div>
+        <div style="font-size:0.8rem;color:var(--text-3);margin-top:4px;">Static IP: 192.168.8.105 · Port 80</div>
+      </div>
+      <div class="cam-card" style="padding:20px 24px;">
+        <div style="font-size:0.7rem;color:var(--text-3);text-transform:uppercase;letter-spacing:.09em;margin-bottom:8px;">
+          <i class="fas fa-video" style="color:var(--green);margin-right:6px;"></i>Stream
+        </div>
+        <div style="font-family:var(--font-head);font-weight:700;font-size:1rem;">MJPEG Stream</div>
+        <div style="font-size:0.8rem;color:var(--text-3);margin-top:4px;">Up to 10fps · 1600×1200 max resolution</div>
       </div>
     </div>
-  </section>
 
+  </div>
+</section>
 
-<!-- ===== FOOTER ===== -->
-<footer class="footer">
+<!-- ═══ QUICK LINKS ═══ -->
+<section class="iot-section" style="padding-bottom:80px;">
   <div class="container">
-    <div class="footer-content">
-      <div class="footer-info">
-        <h3>HelaGrow AI</h3>
-        <p>IoT Environmental Monitoring System</p>
+    <div class="section-tag reveal"><i class="fas fa-link"></i> Navigation</div>
+    <h2 class="section-title reveal">Continue <span class="accent">Exploring</span></h2>
+
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:36px;">
+
+      <div class="cam-card reveal" style="padding:28px;">
+        <div style="font-size:2rem;color:var(--green);margin-bottom:14px;"><i class="fas fa-bug"></i></div>
+        <h3 style="font-family:var(--font-head);font-size:1rem;font-weight:700;margin-bottom:8px;">Disease Library</h3>
+        <p style="font-size:0.85rem;color:var(--text-2);margin-bottom:18px;line-height:1.6;">
+          Full guide to diseases, pests, and nutrient deficiencies affecting Centella Asiatica.
+        </p>
+        <a href="disease.html" class="btn btn-secondary" style="font-size:0.82rem;padding:8px 18px;">
+          <i class="fas fa-book-open"></i> View Guide
+        </a>
       </div>
-      <div class="footer-details">
-        <p>© 2026 HelaGrow AI | Designed & Developed by <strong>Sachintha Nimeshi</strong></p>
+
+      <div class="cam-card reveal" style="padding:28px;">
+        <div style="font-size:2rem;color:var(--green);margin-bottom:14px;"><i class="fas fa-camera"></i></div>
+        <h3 style="font-family:var(--font-head);font-size:1rem;font-weight:700;margin-bottom:8px;">AI Plant Scan</h3>
+        <p style="font-size:0.85rem;color:var(--text-2);margin-bottom:18px;line-height:1.6;">
+          Use your device camera for instant AI-powered disease detection and diagnosis.
+        </p>
+        <a href="home.html#scan" class="btn btn-secondary" style="font-size:0.82rem;padding:8px 18px;">
+          <i class="fas fa-brain"></i> Scan Now
+        </a>
       </div>
+
+      <div class="cam-card reveal" style="padding:28px;">
+        <div style="font-size:2rem;color:var(--green);margin-bottom:14px;"><i class="fas fa-home"></i></div>
+        <h3 style="font-family:var(--font-head);font-size:1rem;font-weight:700;margin-bottom:8px;">Home Dashboard</h3>
+        <p style="font-size:0.85rem;color:var(--text-2);margin-bottom:18px;line-height:1.6;">
+          Return to the main HelaGrow AI homepage for all features and system overview.
+        </p>
+        <a href="home.html" class="btn btn-secondary" style="font-size:0.82rem;padding:8px 18px;">
+          <i class="fas fa-arrow-left"></i> Go Home
+        </a>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ═══ FOOTER ═══ -->
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-brand"><i class="fas fa-leaf"></i>Hela<span>Grow</span> AI</div>
+    <div class="footer-copy">
+      © 2026 HelaGrow AI &nbsp;·&nbsp; IoT Monitoring Module &nbsp;·&nbsp; <strong>Sachintha Nimeshi</strong>
     </div>
   </div>
 </footer>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="iot-script.js"></script>
+<script src="script.js"></script>
 </body>
 </html>
