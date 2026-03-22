@@ -1,17 +1,20 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-from tensorflow.keras.models import load_model
+import tensorflow as tf
 from PIL import Image
 import numpy as np
 import io
 import base64
 
 app = Flask(__name__)
-CORS(app)  # allows your frontend to talk to this server
+CORS(app)
 
-# Load your model once when the server starts
-model = load_model('ml/ml model.keras')
-# Define your class labels (match whatever your model was trained on)
+# ✅ Fixed path — raw string, compile=False for compatibility
+model = tf.keras.models.load_model(
+    r'D:\FINAL YEAR\FYP\Project\fyp\ml\ml model.keras',
+    compile=False
+)
+
 CLASS_LABELS = [
     'Low light intensity(LI)',
     'Nitrogen Deficiency(ND)',
@@ -26,19 +29,17 @@ CLASS_LABELS = [
 @app.route('/predict', methods=['POST'])
 def predict():
     data = request.get_json()
-    
-    # Decode base64 image from frontend
     image_data = base64.b64decode(data['image'].split(',')[1])
     image = Image.open(io.BytesIO(image_data)).convert('RGB')
-    image = image.resize((224, 224))  # match your model's input size
-    
+    image = image.resize((224, 224))
+
     img_array = np.array(image) / 255.0
     img_array = np.expand_dims(img_array, axis=0)
-    
+
     predictions = model.predict(img_array)
     predicted_index = int(np.argmax(predictions[0]))
     confidence = float(np.max(predictions[0])) * 100
-    
+
     return jsonify({
         'disease': CLASS_LABELS[predicted_index],
         'confidence': round(confidence, 1),
