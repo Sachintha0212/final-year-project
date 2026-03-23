@@ -9,7 +9,7 @@ import base64
 app = Flask(__name__)
 CORS(app)
 
-# ✅ Fixed path — raw string, compile=False for compatibility
+
 model = tf.keras.models.load_model(
     r'D:\FINAL YEAR\FYP\Project\fyp\ml\ml model.keras',
     compile=False

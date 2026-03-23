@@ -260,6 +260,8 @@ function closeStream() {
 }
 
 /* ── AI DISEASE ANALYSIS ─────────────────────────────────── */
+const AI_SERVER = 'http://127.0.0.1:5000';
+
 async function analyzeImage() {
   const canvas     = document.getElementById('canvas');
   const analyzing  = document.getElementById('analyzing');
@@ -268,30 +270,74 @@ async function analyzeImage() {
   const confidence = document.getElementById('confidence');
   if (!canvas) return;
 
-  const imageBase64 = canvas.toDataURL('image/jpeg');
-  if (analyzing) { analyzing.style.display = 'flex'; }
+  const imageBase64 = canvas.toDataURL('image/jpeg', 0.92);
+  if (analyzing) { analyzing.style.display = 'flex'; analyzing.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analysing with AI…'; }
   if (result)    { result.style.display = 'none'; }
 
   try {
-    const response = await fetch('http://127.0.0.1:5000/predict', {
+    const response = await fetch(`${AI_SERVER}/predict`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ image: imageBase64 })
     });
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.error || `Server error (HTTP ${response.status})`);
+    }
     const data = await response.json();
 
     if (analyzing) analyzing.style.display = 'none';
     if (result)    result.style.display    = 'block';
-    if (resultText) resultText.textContent = data.disease || 'Healthy';
-    if (confidence) confidence.textContent = (data.confidence || '—') + '%';
 
-  } catch {
+    const label = data.disease || 'Unknown';
+    const isHealthy = label.toLowerCase().includes('normal');
+
+    if (resultText) {
+      resultText.textContent = label;
+      resultText.style.color = isHealthy ? 'var(--green)' : 'var(--rose)';
+    }
+    if (confidence) confidence.textContent = (data.confidence != null ? data.confidence : '—') + '%';
+
+    // Show all-predictions breakdown if available
+    showAllPredictions(data.all_predictions);
+
+  } catch (err) {
     if (analyzing) analyzing.style.display = 'none';
     if (result)    result.style.display    = 'block';
-    if (resultText) resultText.textContent = 'Cannot connect to AI server. Ensure app.py is running on port 5000.';
+
+    const isNetworkErr = err instanceof TypeError && err.message.includes('fetch');
+    if (resultText) {
+      resultText.innerHTML = isNetworkErr
+        ? '⚠️ Cannot reach AI server.<br><small style="font-size:0.78rem;color:var(--text-3)">Make sure <code>app.py</code> is running:<br><code>python app.py</code></small>'
+        : `⚠️ ${err.message}`;
+      resultText.style.color = 'var(--amber)';
+    }
     if (confidence) confidence.textContent = '—';
   }
+}
+
+function showAllPredictions(preds) {
+  if (!preds) return;
+  let box = document.getElementById('allPreds');
+  if (!box) {
+    box = document.createElement('div');
+    box.id = 'allPreds';
+    box.style.cssText = 'margin-top:12px;font-size:0.75rem;color:var(--text-3);display:grid;gap:4px;';
+    const result = document.getElementById('result');
+    if (result) result.appendChild(box);
+  }
+  box.innerHTML = Object.entries(preds)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 4)
+    .map(([label, pct]) => `
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div style="flex:1;font-size:0.72rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${label}</div>
+        <div style="width:80px;height:4px;border-radius:2px;background:rgba(255,255,255,0.06);overflow:hidden;">
+          <div style="height:100%;width:${pct}%;background:var(--green);border-radius:2px;"></div>
+        </div>
+        <div style="width:36px;text-align:right;">${pct}%</div>
+      </div>`)
+    .join('');
 }
 
 /* ── NOTIFICATIONS TOGGLE ────────────────────────────────── */
