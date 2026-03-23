@@ -10,7 +10,7 @@ from flask_cors import CORS
 import tensorflow as tf
 from tensorflow.keras.models import load_model
 from tensorflow.keras.applications.mobilenet_v2 import preprocess_input
-from PIL import Image─
+from PIL import Image
 BASE_DIR   = os.path.dirname(os.path.abspath(__file__))
 MODEL_PATH = os.path.join(BASE_DIR, "models", "model.keras")
 STATIC_DIR = os.path.join(BASE_DIR, "static")
