@@ -44,10 +44,6 @@ def get_model():
         log.info("Model loaded OK — input shape: %s", _model.input_shape)
     return _model
 
-
-# ─────────────────────────────────────────────────────────────────────────────
-# Image helpers
-# ─────────────────────────────────────────────────────────────────────────────
 def decode_base64_image(b64_string: str) -> Image.Image:
     """Accept  data:image/jpeg;base64,....  or raw base64."""
     if "," in b64_string:
