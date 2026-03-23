@@ -108,9 +108,7 @@ def predict():
         log.exception("Inference error")
         return jsonify({"error": f"Inference failed: {exc}"}), 500
 
-    # ── Build response ───────────────────────────────────────────────────────
-    # Use CLASS_NAMES if lengths match, else fall back to index labels
-    n = len(probs)
+   n = len(probs)
     names = CLASS_NAMES if len(CLASS_NAMES) == n else [f"Class {i}" for i in range(n)]
 
     top_idx    = int(np.argmax(probs))
