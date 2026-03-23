@@ -29,9 +29,6 @@ log = logging.getLogger("helagrow")
 app = Flask(__name__, static_folder=STATIC_DIR)
 CORS(app)   # allow requests from the frontend (any origin on localhost)
 
-# ─────────────────────────────────────────────────────────────────────────────
-# Load model once at startup
-# ─────────────────────────────────────────────────────────────────────────────
 _model = None
 
 def get_model():
