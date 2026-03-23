@@ -108,7 +108,9 @@ def predict():
         log.exception("Inference error")
         return jsonify({"error": f"Inference failed: {exc}"}), 500
 
-   n = len(probs)
+    # ── Build response ───────────────────────────────────────────────────────
+    # Use CLASS_NAMES if lengths match, else fall back to index labels
+    n = len(probs)
     names = CLASS_NAMES if len(CLASS_NAMES) == n else [f"Class {i}" for i in range(n)]
 
     top_idx    = int(np.argmax(probs))
@@ -125,10 +127,6 @@ def predict():
         "all_predictions": all_preds,
     })
 
-
-# ─────────────────────────────────────────────────────────────────────────────
-# Entry point
-# ─────────────────────────────────────────────────────────────────────────────
 if __name__ == "__main__":
     os.makedirs(os.path.join(BASE_DIR, "models"), exist_ok=True)
     os.makedirs(STATIC_DIR, exist_ok=True)
