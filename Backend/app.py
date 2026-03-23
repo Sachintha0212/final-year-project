@@ -1,9 +1,3 @@
-"""
-HelaGrow AI — Flask Backend
-POST /predict  → accepts base64 image, returns disease label + confidence
-GET  /health   → server health check
-Serves static frontend files from /static/
-"""
 
 import os
 import io
@@ -13,22 +7,15 @@ import numpy as np
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 
-# ── Lazy-load TF so startup is faster ───────────────────────────────────────
 import tensorflow as tf
 from tensorflow.keras.models import load_model
 from tensorflow.keras.applications.mobilenet_v2 import preprocess_input
-from PIL import Image
-
-# ─────────────────────────────────────────────────────────────────────────────
-# Configuration
-# ─────────────────────────────────────────────────────────────────────────────
+from PIL import Image─
 BASE_DIR   = os.path.dirname(os.path.abspath(__file__))
 MODEL_PATH = os.path.join(BASE_DIR, "models", "model.keras")
 STATIC_DIR = os.path.join(BASE_DIR, "static")
 IMG_SIZE   = (224, 224)
 
-# Class names — must match the order your model was trained with.
-# If your training printed  {"Fungal": 0, "Normal": 1, ...}  use that order.
 CLASS_NAMES = [
     "Fungal Disease",
     "Normal / Healthy",
