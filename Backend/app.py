@@ -69,10 +69,6 @@ def index():
 def static_files(filename):
     return send_from_directory(STATIC_DIR, filename)
 
-
-# ─────────────────────────────────────────────────────────────────────────────
-# Routes — API
-# ─────────────────────────────────────────────────────────────────────────────
 @app.route("/health", methods=["GET"])
 def health():
     """Quick liveness check."""
