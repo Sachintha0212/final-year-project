@@ -38,7 +38,6 @@ document.querySelectorAll('a[href^="#"]').forEach(a => {
       const offset = 80;
       const top = target.getBoundingClientRect().top + window.pageYOffset - offset;
       window.scrollTo({ top, behavior: 'smooth' });
-      // Close mobile menu if open
       navLinks?.classList.remove('open');
     }
   });
@@ -89,63 +88,17 @@ window.addEventListener('load', () => {
   }, 120);
 });
 
-
-/* ── CAMERA ACCESS ───────────────────────────────────────── */
-
 /* ── CAMERA & UPLOAD LOGIC ───────────────────────────────── */
-
-const video = document.getElementById('webcam');
-const startBtn = document.getElementById('startCamera');
-const uploadInput = document.getElementById('imageUpload');
-const triggerUpload = document.getElementById('triggerUpload');
-
-// 1. Handle Camera Permission and Start
-if (startBtn) {
-  startBtn.addEventListener('click', async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { facingMode: 'environment' } // Uses back camera on phones
-      });
-      video.srcObject = stream;
-      video.style.display = 'block';
-      startBtn.innerHTML = '<i class="fas fa-stop"></i> Stop Camera';
-    } catch (err) {
-      console.error("Error accessing camera: ", err);
-      alert("Could not access camera. Please ensure you are using HTTPS and have given permission.");
-    }
-  });
-}
-
-// 2. Handle File Upload Trigger
-if (triggerUpload) {
-  triggerUpload.addEventListener('click', () => uploadInput.click());
-}
-
-// 3. Handle File Preview
-if (uploadInput) {
-  uploadInput.addEventListener('change', (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        // You can display this in an <img> tag as a preview
-        console.log("Image loaded:", event.target.result);
-        alert("Photo uploaded successfully! AI is analyzing...");
-      };
-      reader.readAsDataURL(file);
-    }
-  });
-}
 
 let stream = null;
 
 async function openCamera() {
   console.log('openCamera called');
   const preview  = document.getElementById('cameraPreview');
-  const video    = document.getElementById('video');
+  const videoEl  = document.getElementById('video');
   const btn      = document.getElementById('openCamBtn');
   const captured = document.getElementById('capturedImage');
-  if (!preview || !video) return;
+  if (!preview || !videoEl) return;
 
   // Hide previous result
   if (captured) captured.style.display = 'none';
@@ -171,10 +124,10 @@ async function openCamera() {
       stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
     }
 
-    video.srcObject = stream;
-    video.onloadedmetadata = () => {
+    videoEl.srcObject = stream;
+    videoEl.onloadedmetadata = () => {
       console.log('Video metadata loaded, starting playback');
-      video.play().catch(err => console.error('Play error:', err));
+      videoEl.play().catch(err => console.error('Play error:', err));
     };
     preview.style.display = 'block';
     if (btn) btn.style.display = 'none';
@@ -186,7 +139,7 @@ async function openCamera() {
     if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
       title = 'Camera Permission Denied';
       msg   = 'Please allow camera access in your browser settings, then try again.<br><br>' +
-              '<strong>Chrome:</strong> Click the  icon in the address bar → Site settings → Camera → Allow.<br>' +
+              '<strong>Chrome:</strong> Click the 🔒 icon in the address bar → Site settings → Camera → Allow.<br>' +
               '<strong>Firefox:</strong> Click the camera icon in the address bar and select Allow.<br><br>' +
               'Or use the <strong>Upload Image</strong> button below instead.';
     } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
@@ -257,13 +210,12 @@ function handleFileUpload(input) {
     if (btn)      btn.style.display = 'none';
     hideCameraError();
 
-    // Draw to canvas FIRST, then analyze only after canvas is ready
     const img = new Image();
     img.onload = () => {
       canvas.width  = img.width;
       canvas.height = img.height;
       canvas.getContext('2d').drawImage(img, 0, 0);
-      analyzeImage(); // ← moved inside onload to fix race condition
+      analyzeImage();
     };
     img.src = e.target.result;
   };
@@ -271,16 +223,16 @@ function handleFileUpload(input) {
 }
 
 function captureImage() {
-  const video    = document.getElementById('video');
+  const videoEl  = document.getElementById('video');
   const canvas   = document.getElementById('canvas');
   const captured = document.getElementById('capturedImage');
   const imgEl    = document.getElementById('capturedImg');
   const preview  = document.getElementById('cameraPreview');
-  if (!video || !canvas) return;
+  if (!videoEl || !canvas) return;
 
-  canvas.width  = video.videoWidth  || 640;
-  canvas.height = video.videoHeight || 480;
-  canvas.getContext('2d').drawImage(video, 0, 0);
+  canvas.width  = videoEl.videoWidth  || 640;
+  canvas.height = videoEl.videoHeight || 480;
+  canvas.getContext('2d').drawImage(videoEl, 0, 0);
   const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
 
   if (imgEl)    imgEl.src = dataUrl;
@@ -321,7 +273,6 @@ async function analyzeImage() {
   const confidence = document.getElementById('confidence');
   if (!canvas) return;
 
-  // Show analyzing state
   if (analyzing) {
     analyzing.style.display = 'flex';
     analyzing.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analysing with AI…';
@@ -329,7 +280,6 @@ async function analyzeImage() {
   if (result) result.style.display = 'none';
 
   try {
-    // Get base64 image data (strip the data:image/...;base64, prefix)
     const dataUrl    = canvas.toDataURL('image/jpeg', 0.92);
     const base64Data = dataUrl.split(',')[1];
 
@@ -399,7 +349,6 @@ If the image does not show a plant, set disease to "Not a plant image" and confi
     }
     if (confidence) confidence.textContent = (data.confidence != null ? data.confidence : '—') + '%';
 
-    // Show description + treatment if available
     showDescription(data.description, data.treatment);
     showAllPredictions(data.all_predictions);
 
@@ -408,7 +357,7 @@ If the image does not show a plant, set disease to "Not a plant image" and confi
     if (result)    result.style.display    = 'block';
 
     if (resultText) {
-      resultText.innerHTML = ` ${err.message || 'Analysis failed. Please try again.'}`;
+      resultText.innerHTML = `${err.message || 'Analysis failed. Please try again.'}`;
       resultText.style.color = 'var(--amber)';
     }
     if (confidence) confidence.textContent = '—';
@@ -430,29 +379,6 @@ function showDescription(description, treatment) {
   box.innerHTML = '';
   if (description) box.innerHTML += `<p style="margin:0 0 6px;">${description}</p>`;
   if (treatment)   box.innerHTML += `<p style="margin:0;color:var(--green);"><i class="fas fa-stethoscope" style="margin-right:5px;"></i>${treatment}</p>`;
-}
-
-function showIotContext(iot) {
-  const result = document.getElementById('result');
-  if (!result || !iot) return;
-
-  let box = document.getElementById('iotContext');
-  if (!box) {
-    box = document.createElement('div');
-    box.id = 'iotContext';
-    box.style.cssText = 'margin-top:10px;font-size:0.74rem;color:var(--text-3);line-height:1.5;';
-    result.appendChild(box);
-  }
-
-  if (!iot.connected || !iot.latest) {
-    box.textContent = 'IoT link: no recent sensor data from backend.';
-    return;
-  }
-
-  const t = iot.latest.temperature;
-  const h = iot.latest.humidity;
-  const s = iot.latest.soil_moisture;
-  box.textContent = `IoT link: Temp ${t ?? '--'} C, Humidity ${h ?? '--'}%, Soil ${s ?? '--'}%.`;
 }
 
 function showAllPredictions(preds) {
@@ -510,7 +436,6 @@ function renderIotAlerts(alerts) {
     box.innerHTML = '<div class="notif-item"><div class="notif-text"><p>No alerts yet</p></div></div>';
     return;
   }
-
   box.innerHTML = alerts.map((item) => {
     const dotClass = item.severity === 'critical'
       ? 'err'
@@ -580,7 +505,6 @@ function toggleNotifs() {
     });
   }
 }
-// Legacy alias
 function showNotifications() { toggleNotifs(); }
 
 /* ── IOT CAMERA REFRESH ──────────────────────────────────── */
@@ -603,7 +527,7 @@ function updateTimestamp() {
   });
 }
 
-/* ── AUTO-REFRESH TIMESTAMP ──────────────────────────────── */
+/* ── AUTO-REFRESH ────────────────────────────────────────── */
 document.addEventListener('DOMContentLoaded', () => {
   updateTimestamp();
   setInterval(updateTimestamp, 1000);
@@ -613,6 +537,73 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   console.log('🌱 HelaGrow AI — system initialized');
 });
+
+/* ── HOME PAGE CAMERA FEED ───────────────────────────────── */
+async function initiateCameraFeed() {
+  const container = document.getElementById('homeCameraContainer');
+  if (!container) return;
+  container.style.display = 'block';
+  await loadHomeCamera();
+}
+
+async function loadHomeCamera() {
+  try {
+    const endpoints = [
+      'http://localhost:5000/iot/data',
+      'http://127.0.0.1:5000/iot/data',
+      '/iot/data',
+      'https://localhost:5000/iot/data'
+    ];
+
+    let data = null;
+    for (const endpoint of endpoints) {
+      try {
+        const response = await fetch(endpoint, { timeout: 3000 });
+        if (response.ok) {
+          data = await response.json();
+          break;
+        }
+      } catch (e) {
+        continue;
+      }
+    }
+
+    if (data && data.camera_url) {
+      const frame      = document.getElementById('homeCameraFrame');
+      const cameraIp   = document.getElementById('homeCameraIp');
+      const cameraLink = document.getElementById('homeCameraLink');
+      if (frame)      frame.src          = data.camera_url;
+      if (cameraIp)   cameraIp.textContent = data.camera_url;
+      if (cameraLink) cameraLink.href    = data.camera_url;
+    } else {
+      showHomeCameraError('Unable to fetch camera URL from backend. Make sure the Flask server is running.');
+    }
+  } catch (err) {
+    showHomeCameraError('Camera feed unavailable. ' + (err.message || 'Check your network connection.'));
+  }
+}
+
+function refreshHomeCamera() {
+  const frame = document.getElementById('homeCameraFrame');
+  if (frame) {
+    const src = frame.src;
+    frame.src = '';
+    setTimeout(() => { frame.src = src; }, 300);
+  }
+}
+
+function showHomeCameraError(msg) {
+  const container = document.getElementById('homeCameraContainer');
+  if (!container) return;
+  const errorBox = document.createElement('div');
+  errorBox.style.cssText = `
+    padding:12px 16px;border-radius:8px;
+    background:rgba(255,91,110,0.08);border:1px solid rgba(255,91,110,0.3);
+    color:#f0f5f1;font-size:0.85rem;margin-top:10px;
+  `;
+  errorBox.innerHTML = `<i class="fas fa-exclamation-circle" style="color:#ff5b6e;margin-right:6px;"></i>${msg}`;
+  container.appendChild(errorBox);
+}
 
 /* ── KEYBOARD SHORTCUTS ──────────────────────────────────── */
 document.addEventListener('keydown', e => {

@@ -104,7 +104,6 @@
     </div>
   </div>
 </section>
-
 <!-- ═══ QUICK ACTIONS ═══ -->
 <section class="quick-section" id="scan">
   <div class="container">
@@ -124,8 +123,8 @@
           </button>
           <label class="btn btn-outline" style="cursor:pointer;">
             <i class="fas fa-upload"></i> Upload Image
-            <input type="file" accept="image/*" capture="environment" style="display:none;" onchange="handleFileUpload(this)">
-           </label>
+            <input type="file" accept="image/*" style="display:none;" onchange="handleFileUpload(this)">
+          </label>
         </div>
 
         <!-- Camera Preview -->
@@ -148,7 +147,7 @@
           <div class="analysis-result" id="analysisResult">
             <div class="analyzing" id="analyzing">
               <i class="fas fa-spinner fa-spin"></i>
-              Connecting to AI model…
+              Analysing with AI…
             </div>
             <div class="result" id="result" style="display:none;">
               <h4>Analysis Complete</h4>
@@ -175,6 +174,7 @@
     </div>
   </div>
 </section>
+
 
 <!-- ═══ FEATURES ═══ -->
 <section class="features-section" id="features">
