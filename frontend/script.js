@@ -91,6 +91,52 @@ window.addEventListener('load', () => {
 
 
 /* ── CAMERA ACCESS ───────────────────────────────────────── */
+
+/* ── CAMERA & UPLOAD LOGIC ───────────────────────────────── */
+
+const video = document.getElementById('webcam');
+const startBtn = document.getElementById('startCamera');
+const uploadInput = document.getElementById('imageUpload');
+const triggerUpload = document.getElementById('triggerUpload');
+
+// 1. Handle Camera Permission and Start
+if (startBtn) {
+  startBtn.addEventListener('click', async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        video: { facingMode: 'environment' } // Uses back camera on phones
+      });
+      video.srcObject = stream;
+      video.style.display = 'block';
+      startBtn.innerHTML = '<i class="fas fa-stop"></i> Stop Camera';
+    } catch (err) {
+      console.error("Error accessing camera: ", err);
+      alert("Could not access camera. Please ensure you are using HTTPS and have given permission.");
+    }
+  });
+}
+
+// 2. Handle File Upload Trigger
+if (triggerUpload) {
+  triggerUpload.addEventListener('click', () => uploadInput.click());
+}
+
+// 3. Handle File Preview
+if (uploadInput) {
+  uploadInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        // You can display this in an <img> tag as a preview
+        console.log("Image loaded:", event.target.result);
+        alert("Photo uploaded successfully! AI is analyzing...");
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+}
+
 let stream = null;
 
 async function openCamera() {
