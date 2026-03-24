@@ -140,7 +140,7 @@ async function openCamera() {
     if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
       title = 'Camera Permission Denied';
       msg   = 'Please allow camera access in your browser settings, then try again.<br><br>' +
-              '<strong>Chrome:</strong> Click the 🔒 icon in the address bar → Site settings → Camera → Allow.<br>' +
+              '<strong>Chrome:</strong> Click the  icon in the address bar → Site settings → Camera → Allow.<br>' +
               '<strong>Firefox:</strong> Click the camera icon in the address bar and select Allow.<br><br>' +
               'Or use the <strong>Upload Image</strong> button below instead.';
     } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
@@ -206,20 +206,20 @@ function handleFileUpload(input) {
     const canvas   = document.getElementById('canvas');
     const btn      = document.getElementById('openCamBtn');
 
-    // Draw to canvas so analyzeImage can read it
+    if (imgEl)    imgEl.src = e.target.result;
+    if (captured) captured.style.display = 'block';
+    if (btn)      btn.style.display = 'none';
+    hideCameraError();
+
+    // Draw to canvas FIRST, then analyze only after canvas is ready
     const img = new Image();
     img.onload = () => {
       canvas.width  = img.width;
       canvas.height = img.height;
       canvas.getContext('2d').drawImage(img, 0, 0);
+      analyzeImage(); // ← moved inside onload to fix race condition
     };
     img.src = e.target.result;
-
-    if (imgEl)    imgEl.src = e.target.result;
-    if (captured) captured.style.display = 'block';
-    if (btn)      btn.style.display = 'none';
-    hideCameraError();
-    analyzeImage();
   };
   reader.readAsDataURL(file);
 }
@@ -265,12 +265,6 @@ function closeStream() {
 }
 
 /* ── AI DISEASE ANALYSIS ─────────────────────────────────── */
-const API_SERVER = (() => {
-  if (location.protocol.startsWith('http')) {
-    return `${location.protocol}//${location.hostname}:5000`;
-  }
-  return 'http://127.0.0.1:5000';
-})();
 
 async function analyzeImage() {
   console.log('analyzeImage called');
@@ -281,27 +275,77 @@ async function analyzeImage() {
   const confidence = document.getElementById('confidence');
   if (!canvas) return;
 
-  const imageBase64 = canvas.toDataURL('image/jpeg', 0.92);
-  if (analyzing) { analyzing.style.display = 'flex'; analyzing.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analysing with AI…'; }
-  if (result)    { result.style.display = 'none'; }
+  // Show analyzing state
+  if (analyzing) {
+    analyzing.style.display = 'flex';
+    analyzing.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analysing with AI…';
+  }
+  if (result) result.style.display = 'none';
 
   try {
-    const response = await fetch(`${API_SERVER}/predict`, {
+    // Get base64 image data (strip the data:image/...;base64, prefix)
+    const dataUrl    = canvas.toDataURL('image/jpeg', 0.92);
+    const base64Data = dataUrl.split(',')[1];
+
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ image: imageBase64 })
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{
+          role: 'user',
+          content: [
+            {
+              type: 'image',
+              source: { type: 'base64', media_type: 'image/jpeg', data: base64Data }
+            },
+            {
+              type: 'text',
+              text: `You are an expert plant pathologist specialising in Centella Asiatica (Gotu Kola).
+Analyse this image and respond ONLY with a JSON object — no markdown, no extra text.
+
+Required format:
+{
+  "disease": "<disease name or 'Healthy / Normal'>",
+  "confidence": <0-100 integer>,
+  "description": "<one sentence summary>",
+  "treatment": "<brief recommended action>",
+  "all_predictions": {
+    "<top label>": <confidence %>,
+    "<2nd label>": <confidence %>,
+    "<3rd label>": <confidence %>
+  }
+}
+
+If the image does not show a plant, set disease to "Not a plant image" and confidence to 0.`
+            }
+          ]
+        }]
+      })
     });
+
     if (!response.ok) {
       const err = await response.json().catch(() => ({}));
-      throw new Error(err.error || `Server error (HTTP ${response.status})`);
+      throw new Error(err.error?.message || `API error (HTTP ${response.status})`);
     }
-    const data = await response.json();
+
+    const apiData = await response.json();
+    const rawText = apiData.content?.map(b => b.text || '').join('') || '';
+
+    let data;
+    try {
+      const clean = rawText.replace(/```json|```/g, '').trim();
+      data = JSON.parse(clean);
+    } catch {
+      throw new Error('AI returned an unexpected response. Please try again.');
+    }
 
     if (analyzing) analyzing.style.display = 'none';
     if (result)    result.style.display    = 'block';
 
-    const label = data.disease || 'Unknown';
-    const isHealthy = label.toLowerCase().includes('normal');
+    const label     = data.disease || 'Unknown';
+    const isHealthy = label.toLowerCase().includes('normal') || label.toLowerCase().includes('healthy');
 
     if (resultText) {
       resultText.textContent = label;
@@ -309,23 +353,37 @@ async function analyzeImage() {
     }
     if (confidence) confidence.textContent = (data.confidence != null ? data.confidence : '—') + '%';
 
-    // Show all-predictions breakdown if available
+    // Show description + treatment if available
+    showDescription(data.description, data.treatment);
     showAllPredictions(data.all_predictions);
-    showIotContext(data.iot);
 
   } catch (err) {
     if (analyzing) analyzing.style.display = 'none';
     if (result)    result.style.display    = 'block';
 
-    const isNetworkErr = err instanceof TypeError && err.message.includes('fetch');
     if (resultText) {
-      resultText.innerHTML = isNetworkErr
-        ? '⚠️ Cannot reach AI server.<br><small style="font-size:0.78rem;color:var(--text-3)">Make sure <code>app.py</code> is running:<br><code>python app.py</code></small>'
-        : `⚠️ ${err.message}`;
+      resultText.innerHTML = ` ${err.message || 'Analysis failed. Please try again.'}`;
       resultText.style.color = 'var(--amber)';
     }
     if (confidence) confidence.textContent = '—';
   }
+}
+
+function showDescription(description, treatment) {
+  if (!description && !treatment) return;
+  const result = document.getElementById('result');
+  if (!result) return;
+
+  let box = document.getElementById('diseaseDesc');
+  if (!box) {
+    box = document.createElement('div');
+    box.id = 'diseaseDesc';
+    box.style.cssText = 'margin-top:10px;font-size:0.8rem;color:var(--text-2);line-height:1.6;';
+    result.appendChild(box);
+  }
+  box.innerHTML = '';
+  if (description) box.innerHTML += `<p style="margin:0 0 6px;">${description}</p>`;
+  if (treatment)   box.innerHTML += `<p style="margin:0;color:var(--green);"><i class="fas fa-stethoscope" style="margin-right:5px;"></i>${treatment}</p>`;
 }
 
 function showIotContext(iot) {
