@@ -459,55 +459,6 @@
         </div>
       </div>
 
-      <!-- RIGHT: SIDE PANEL -->
-      <div class="side-col">
-
-        <!-- IoT Sensors -->
-        <div class="card">
-          <div class="card-head">
-            <h3><i class="fas fa-satellite-dish"></i> IoT Sensors</h3>
-            <button class="iot-refresh" id="iotRefreshBtn" onclick="fetchIot(true)">
-              <i class="fas fa-sync-alt"></i> Refresh
-            </button>
-          </div>
-          <div class="card-body" style="padding:18px;">
-            <div class="iot-mini-hd">
-              <div class="iot-badge" id="iotConnBadge">
-                <i class="fas fa-circle"></i> Waiting for ESP32
-              </div>
-              <span style="font-size:.7rem;color:var(--text-3);">Updated: <span id="iotUpdated">—</span></span>
-            </div>
-            <div class="sensor-grid">
-              <div class="sensor-tile" id="tileTemp">
-                <div class="sensor-lbl"><i class="fas fa-temperature-half"></i> Temp</div>
-                <div class="sensor-val" id="sTemp">--</div>
-                <div class="sensor-range">Target: 20–30 °C</div>
-              </div>
-              <div class="sensor-tile" id="tileHumid">
-                <div class="sensor-lbl"><i class="fas fa-droplet"></i> Humidity</div>
-                <div class="sensor-val" id="sHumid">--</div>
-                <div class="sensor-range">Target: 60–80 %</div>
-              </div>
-              <div class="sensor-tile" id="tileSoil">
-                <div class="sensor-lbl"><i class="fas fa-water"></i> Soil</div>
-                <div class="sensor-val" id="sSoil">--</div>
-                <div class="sensor-range">Irrigate below 35 %</div>
-              </div>
-              <div class="sensor-tile" id="tileLight">
-                <div class="sensor-lbl"><i class="fas fa-sun"></i> Light</div>
-                <div class="sensor-val" id="sLight">--</div>
-                <div class="sensor-range">Low → slow growth</div>
-              </div>
-            </div>
-            <div class="alerts-wrap">
-              <div class="alerts-lbl"><i class="fas fa-bell"></i> Alerts</div>
-              <div id="alertsBox">
-                <div class="alert-item"><div class="adot"></div><span>Waiting for live data…</span></div>
-              </div>
-            </div>
-          </div>
-        </div>
-
         <!-- Tips -->
         <div class="card">
           <div class="card-head"><h3><i class="fas fa-lightbulb"></i> Tips</h3></div>
