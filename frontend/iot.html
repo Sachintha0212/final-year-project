@@ -488,6 +488,32 @@
     </div>
   </div>
 </section>
+<!-- 📤 IoT Image Upload -->
+<div style="margin-top:20px;padding-top:15px;border-top:1px solid var(--border);">
+
+  <div class="snap-label">
+    <i class="fas fa-upload"></i> Upload Image (IoT Alternative)
+  </div>
+
+  <input type="file" id="uploadInput" accept="image/*" 
+         style="margin-bottom:10px;color:var(--text-2);">
+
+  <div class="feed-wrap" style="max-height:250px;">
+    <img id="uploadPreview" style="display:none;object-fit:contain;width:100%;">
+  </div>
+
+  <div class="controls-row">
+    <button class="btn btn-primary btn-sm" onclick="analyseUpload()">
+      <i class="fas fa-brain"></i> Analyse Image
+    </button>
+    <button class="btn btn-outline btn-sm" onclick="clearUpload()">
+      <i class="fas fa-trash"></i> Clear
+    </button>
+  </div>
+
+  <div class="ai-panel" id="uploadAiPanel"></div>
+
+</div>
 
 <!-- FOOTER -->
 <footer class="footer">
@@ -499,7 +525,62 @@
 
 <script>
 'use strict';
+let uploadB64 = null;
 
+// Preview image
+document.getElementById("uploadInput").addEventListener("change", function(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(evt) {
+    const img = document.getElementById("uploadPreview");
+    img.src = evt.target.result;
+    img.style.display = "block";
+
+    // extract base64
+    uploadB64 = evt.target.result.split(",")[1];
+  };
+  reader.readAsDataURL(file);
+});
+
+// Analyse uploaded image
+async function analyseUpload() {
+  if (!uploadB64) {
+    alert("Please upload an image first");
+    return;
+  }
+
+  const panel = document.getElementById("uploadAiPanel");
+  panel.className = "ai-panel visible";
+  panel.innerHTML = "<div class='ai-spinner'><i class='fas fa-brain'></i> Analysing...</div>";
+
+  try {
+    const res = await fetch(`${API_SERVER}/predict`, {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({ image: uploadB64 })
+    });
+
+    const data = await res.json();
+
+    data.description = DESC[data.disease] || null;
+    data.treatment = TREAT[data.disease] || null;
+
+    renderAi(data, "uploadAiPanel");
+
+  } catch (err) {
+    showAiErr("uploadAiPanel", err.message);
+  }
+}
+
+// Clear upload
+function clearUpload() {
+  document.getElementById("uploadPreview").style.display = "none";
+  document.getElementById("uploadInput").value = "";
+  document.getElementById("uploadAiPanel").className = "ai-panel";
+  uploadB64 = null;
+}
 /* ── CONFIG ── */
 const API_SERVER = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
   ? `http://${window.location.hostname}:5000`
