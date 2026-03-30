@@ -14,13 +14,8 @@ import tensorflow as tf
 from tensorflow.keras.models import load_model
 from tensorflow.keras.applications.mobilenet_v2 import preprocess_input
 
-# ──────────────────────────────────────────────
-#  SETTINGS
-# ──────────────────────────────────────────────
 
 MODEL_PATH = os.path.join(os.path.dirname(__file__), "..", "ml", "model.keras")
-
-# Sorted alphabetically — matches flow_from_directory training order
 CLASS_NAMES = [
     "Low light intensity (LI)",     
     "Nitrogen Deficiency (ND)",     
@@ -44,9 +39,7 @@ IOT_STATE = {
     "updated_at": None,
 }
 
-# ──────────────────────────────────────────────
 #  LOAD MODEL
-# ──────────────────────────────────────────────
 
 print(f"\n Loading model: {os.path.abspath(MODEL_PATH)}")
 model = load_model(MODEL_PATH)
@@ -57,9 +50,7 @@ if model.output_shape[-1] != len(CLASS_NAMES):
 else:
     print(f" CLASS_NAMES count matches model output. All good!\n")
 
-# ──────────────────────────────────────────────
 #  FLASK APP
-# ──────────────────────────────────────────────
 
 FRONTEND_DIR = os.path.join(os.path.dirname(__file__), "..", "frontend")
 app = Flask(__name__, static_folder=FRONTEND_DIR, static_url_path="")
