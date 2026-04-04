@@ -12,11 +12,9 @@
 #include "esp32-hal-log.h"
 #endif
 
-// Face Detection will not work on boards without (or with disabled) PSRAM
 #ifdef BOARD_HAS_PSRAM
 #define CONFIG_ESP_FACE_DETECT_ENABLED 1
-// Face Recognition takes upward from 15 seconds per frame on chips other than ESP32S3
-// Makes no sense to have it enabled for them
+
 #if CONFIG_IDF_TARGET_ESP32S3
 #define CONFIG_ESP_FACE_RECOGNITION_ENABLED 1
 #else
@@ -33,9 +31,7 @@
 #include "human_face_detect_msr01.hpp"
 #include "human_face_detect_mnp01.hpp"
 
-#define TWO_STAGE 1 /*<! 1: detect by two-stage which is more accurate but slower(with keypoints). */
-                    /*<! 0: detect by one-stage which is less accurate but faster(without keypoints). */
-
+#define TWO_STAGE 1 
 #if CONFIG_ESP_FACE_RECOGNITION_ENABLED
 #include "face_recognition_tool.hpp"
 #include "face_recognition_112_v1_s16.hpp"
@@ -105,11 +101,11 @@ static int8_t is_enrolling = 0;
 
 typedef struct
 {
-    size_t size;  //number of values used for filtering
-    size_t index; //current value index
-    size_t count; //value count
+    size_t size;  
+    size_t index; 
+    size_t count; 
     int sum;
-    int *values; //array to be filled with values
+    int *values; 
 } ra_filter_t;
 
 static ra_filter_t ra_filter;
