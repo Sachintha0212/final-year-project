@@ -39,7 +39,7 @@ IOT_STATE = {
     "updated_at": None,
 }
 
-#  LOAD MODEL
+#  Loading the model
 
 print(f"\n Loading model: {os.path.abspath(MODEL_PATH)}")
 model = load_model(MODEL_PATH)
@@ -50,7 +50,6 @@ if model.output_shape[-1] != len(CLASS_NAMES):
 else:
     print(f" CLASS_NAMES count matches model output. All good!\n")
 
-#  FLASK APP
 
 FRONTEND_DIR = os.path.join(os.path.dirname(__file__), "..", "frontend")
 app = Flask(__name__, static_folder=FRONTEND_DIR, static_url_path="")
@@ -169,12 +168,12 @@ def get_iot_data():
 
 @app.route("/predict", methods=["POST"])
 def predict():
-    # 1. Get JSON body
+    # JSON body
     data = request.get_json(force=True, silent=True) or {}
     if "image" not in data:
         return jsonify({"error": "Missing 'image' field"}), 400
 
-    # 2. Decode base64 image
+    # Decode base64 image
     try:
         b64 = data["image"]
         if "," in b64:
@@ -183,13 +182,13 @@ def predict():
     except Exception as e:
         return jsonify({"error": f"Invalid image: {e}"}), 400
 
-    # 3. Preprocess
+    # Preprocessing
     img = img.resize(IMG_SIZE, Image.LANCZOS)
     arr = np.array(img, dtype=np.float32)
     arr = preprocess_input(arr)
     arr = np.expand_dims(arr, axis=0)
 
-    # 4. Predict
+    #Predicting
     probs = model.predict(arr, verbose=0)[0]
     n     = len(probs)
     names = CLASS_NAMES if len(CLASS_NAMES) == n else [f"Class {i}" for i in range(n)]
@@ -213,7 +212,7 @@ def predict():
     print(f" Prediction: {result['disease']}  ({result['confidence']}%)")
     return jsonify(result)
 
-#  RUN
+# Main
 
 if __name__ == "__main__":
     print(" HelaGrow AI running at http://127.0.0.1:5000\n")
